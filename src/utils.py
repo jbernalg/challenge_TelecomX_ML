@@ -1,5 +1,8 @@
 # utils.py
 import numpy as np
+import pandas as pd
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, roc_auc_score, RocCurveDisplay, precision_recall_curve
+import matplotlib.pyplot as plt
 
 def cv_score_interval(results, nombre: str, score: str = 'Recall'):
     '''
@@ -19,3 +22,35 @@ def cv_score_interval(results, nombre: str, score: str = 'Recall'):
 
 
 
+def plot_mat_confusion(model,
+                  x: pd.core.frame.DataFrame, 
+                  y: pd.core.series.Series, 
+                  name: str,
+                  umbral: float=None):
+    '''
+     grafica la matriz de confusion de un modelo dado
+     x: variables predictoras
+     y: variable target
+    '''
+    
+    if umbral == None:
+        y_pred = model.predict(x)
+    else:
+        y_probs = model.predict_proba(x)[:, 1]
+        y_pred = (y_probs >= umbral).astype(int) 
+        
+    confmat = confusion_matrix(y_true=y, y_pred=y_pred)
+
+    confmat_plot = ConfusionMatrixDisplay(confmat, display_labels=['Permanecen', 'Cancelan'])
+
+    fig, ax = plt.subplots(figsize=(10,6))
+    confmat_plot.plot(ax=ax, colorbar=False, text_kw={'color': 'black', 'fontweight': 'bold'})
+
+    plt.title(name, fontsize=18, fontweight='bold')
+    plt.xlabel('Etiquetas Prediccion', fontsize=16)
+    plt.ylabel('Etiquetas Reales ', fontsize=16)
+    plt.tick_params(axis='both', labelsize=13)
+    
+    plt.subplots_adjust(right=0.88)
+    plt.tight_layout(pad=3.0)
+    plt.show()
